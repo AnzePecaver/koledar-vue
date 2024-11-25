@@ -52,6 +52,7 @@ Aplikacija bo na voljo na izpisanem naslovu.
 
 ## Konfiguracija
 - Prazniki se nalagajo iz tekstovne datoteke `prazniki.txt`, ki se nahaja v direktoriju `dist`. Podatki so podani v formatu `YYYY-MM-DD` in so ločeni z vejico. Če je praznik ponavljajoč, je namesto leta podan znak 'P'. To datoteko lahko uredite, da dodate svoje praznike.
+- Če je aplikacija znova zgrajena oz. zagnana v načinu razvoja, je potrebno spremeniti originalno tekstovno datoteko `prazniki.txt` v direktoriju `public`
 
 ## Uporabljene tehnologije
 - Vue 3

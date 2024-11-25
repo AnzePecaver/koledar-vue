@@ -1,5 +1,6 @@
 <template>
     <div class="calendar-container">
+        <div class="error" v-if="holidayError">{{ holidayError }}</div>
         <div class="calendar-head">
             <h1>Moj Koledar</h1>
             <!-- Nadzor koledarja -->
@@ -35,22 +36,20 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
 import CalendarDisplay from './CalendarDisplay.vue';
-import { watch } from 'vue';
-import { computed } from 'vue';
 
 const currentDate = new Date()
 
-// Trenutno izbrano leto in mesec
+// Trenutno izbrano leto in mesec (0 - 11)
 const year = ref(currentDate.getFullYear())
 const month = ref(currentDate.getMonth())
 
 // Trenutno izbrani datum
-const date = ref(`${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`)
+const date = ref(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`)
 
 // Posodabljanje trenutno izbranega leta in meseca glede na izbrani datum
-watch(date, (newDate: String) => {
+watch(date, (newDate) => {
     const newDateParts = newDate.split('-')
     const newYear = parseInt(newDateParts[0])
     const newMonth = parseInt(newDateParts[1])
@@ -64,19 +63,30 @@ watch(date, (newDate: String) => {
     }
 })
 
+interface HolidayMap {
+  [year: string]: {
+    [month: number]: number[]
+  }
+}
+
 // Prazniki, organizirani po dnevu in mesecu
-const holidays = ref<any>({})
+const holidays = ref<HolidayMap>({})
 
 const holidayFileUrl = "/prazniki.txt"
 
+const holidayError = ref("")
 // Pridobivanje in parsiranje seznama praznikov
 fetchHolidays()
 
 async function fetchHolidays() {
+
+    holidayError.value = ""
+
     const response = await fetch(holidayFileUrl)
 
     if(!response.ok) {
         console.error("Napaka pri pridobivanju praznikov")
+        holidayError.value = "Prišlo je do napake pri nalaganju praznikov."
         return
     }
 
@@ -84,14 +94,20 @@ async function fetchHolidays() {
 
     const holidayDateList = text.split(',')
 
-    const holidayMap: any = {}
+    const holidayMap: HolidayMap = {}
 
     // Mapiranje praznika glede na leto ali ponavljanje in mesec
     holidayDateList.forEach((holiday) => {
         const holidayDateParts = holiday.split("-")
+
         const holidayYear = holidayDateParts[0] === "P" ? "P" : parseInt(holidayDateParts[0])
         const holidayMonth = parseInt(holidayDateParts[1])
         const holidayDay = parseInt(holidayDateParts[2])
+
+        // Preverjanje formata datuma
+        if((holidayYear !== "P" && isNaN(holidayYear)) || isNaN(holidayMonth) || isNaN(holidayDay)) {
+            return
+        }
 
         if(!holidayMap[holidayYear])  {
             holidayMap[holidayYear] = {}
@@ -109,9 +125,10 @@ async function fetchHolidays() {
 const actualHolidays = computed(() => {
 
     const actualYear = year.value
+    // Dodajanje 1 zaradi indeksiranja mesecev, ki se začne z 0
     const actualMonth = month.value + 1
 
-    let actualHolidayList: any[] = []
+    let actualHolidayList: number[] = []
 
     if (holidays.value[actualYear] && holidays.value[actualYear][actualMonth]) {
         actualHolidayList = actualHolidayList.concat(holidays.value[actualYear][actualMonth])
@@ -141,13 +158,15 @@ const actualHolidays = computed(() => {
 }
 
 input, select {
-    all: unset;
+    border: none;
+    background: none;
     font-size: 1.125rem;
     font-weight: bold;
+    font-family: inherit;
 }
 
 #yearInput {
-    max-width: 4rem;
+    max-width: 4.5rem;
 }
 
 .calendar-controls {
@@ -157,9 +176,17 @@ input, select {
 
 #dateInput {
     padding: 0.75rem 1.25rem;
-    border-radius: 0.25rem;
+    border-radius: 0.5rem;
     background-color: #08080f;
+    border: 1px solid #08080f;
     color: #f8f8ff;
+    transition: color 0.125s ease, background-color 0.25s ease;
+    cursor: text;
+}
+
+#dateInput:hover {
+    color: #08080f;
+    background-color: #f8f8ff;
 }
 
 .month-year-selector {
@@ -167,7 +194,7 @@ input, select {
     align-items: center;
     justify-content: center;
     padding: 0.5rem 1rem 0.5rem 0.5rem;
-    border-radius: 0.3rem;
+    border-radius: 0.5rem;
     gap: 0.5rem;
     border: 1px solid #58585f;
     text-align: end;
@@ -182,6 +209,10 @@ input, select {
 .month-year-selector *:hover {
     background-color: #08080f;
     color: #f8f8ff;
+}
+
+.error {
+    color: #ff3c00
 }
 
 @media screen and (max-width: 900px) {
@@ -199,17 +230,14 @@ input, select {
     }
 
     input, select {
-        all: unset;
         font-size: 0.875rem;
-        font-weight: bold;
     }
 
     #dateInput {
         padding: 0.5rem 0.75rem;
-        border-radius: 0.25rem;
         background-color: #08080f;
         color: #f8f8ff;
-        max-width: 6.5rem;
+        max-width: 8rem;
     }
 
     #yearInput {

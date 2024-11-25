@@ -23,9 +23,16 @@ const calendarOpen = ref(true)
   border: 1px solid #58585f;
   transition: background-color 0.25s ease, color 0.25s ease;
   cursor: pointer;
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
+  position: absolute;
+  top: 1rem;
+  left: 2rem;
+}
+
+@media screen and (max-width: 900px) {
+  #calendarToggleButton {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
 }
 
 #calendarToggleButton:hover {

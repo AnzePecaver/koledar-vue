@@ -1,26 +1,26 @@
 <template>
     <div class="calendar">
         <!-- Glava koledarja za velik zaslon -->
-        <div class="day header hidden show-lg bg-green">Ponedeljek</div>
-        <div class="day header hidden show-lg bg-blue">Torek</div>
-        <div class="day header hidden show-lg bg-red">Sreda</div>
-        <div class="day header hidden show-lg bg-orange">Četrtek</div>
-        <div class="day header hidden show-lg bg-green">Petek</div>
-        <div class="day header hidden show-lg bg-blue">Sobota</div>
-        <div class="day header hidden show-lg bg-red">Nedelja</div>
+        <div class="day header hidden show-lg ">Ponedeljek</div>
+        <div class="day header hidden show-lg ">Torek</div>
+        <div class="day header hidden show-lg ">Sreda</div>
+        <div class="day header hidden show-lg ">Četrtek</div>
+        <div class="day header hidden show-lg ">Petek</div>
+        <div class="day header hidden show-lg ">Sobota</div>
+        <div class="day header hidden show-lg ">Nedelja</div>
 
         <!-- Glava koledarja za manjši zaslon -->
-        <div class="day header hidden-lg bg-green">Pon</div>
-        <div class="day header hidden-lg bg-blue">Tor</div>
-        <div class="day header hidden-lg bg-red">Sre</div>
-        <div class="day header hidden-lg bg-orange">Čet</div>
-        <div class="day header hidden-lg bg-green">Pet</div>
-        <div class="day header hidden-lg bg-blue">Sob</div>
-        <div class="day header hidden-lg bg-red">Ned</div>
+        <div class="day header hidden-lg ">Pon</div>
+        <div class="day header hidden-lg ">Tor</div>
+        <div class="day header hidden-lg ">Sre</div>
+        <div class="day header hidden-lg ">Čet</div>
+        <div class="day header hidden-lg ">Pet</div>
+        <div class="day header hidden-lg ">Sob</div>
+        <div class="day header hidden-lg ">Ned</div>
 
         <!-- Mreža dni z oznakami -->
-        <div v-for="day, i in calendarDays" class="day" :class="{'holiday': day?.isHoliday, 'sunday': (i + 1) % 7 == 0}">
-            <div class="day-number">{{ day?.day }}</div>
+        <div v-for="(day, i) in calendarDays" :key="i" class="day" :class="{'holiday': day?.isHoliday, 'sunday': (i + 1) % 7 == 0}">
+            <div class="day-number">{{ day ? day.day : "" }}</div>
             <div v-if="day?.isHoliday" class="holiday-text hidden show-lg">Praznik</div>
         </div>
     </div>
@@ -30,21 +30,25 @@
 import { computed } from 'vue';
 
 type CalendarDate = {
-    day: Number,
+    day: number,
     isHoliday: boolean
 }
 
-const props = defineProps({
-    year: Number,
-    month: Number,
-    holidays: Array<Number> || null
-})
+// Pridobljene vrednosti leto, mesec (0 - 11) in seznam aktualnih praznikov za izbrani mesec in leto
+const props = defineProps<{
+    year?: number,
+    month?: number,
+    holidays?: number[]
+}>()
 
 // Seznam dni v mesecu za prikaz na koledarju
 const calendarDays = computed(() => {
 
+    // Seznam dni v mesecu inicializiran s praznimi vrednostmi
+    const days: (CalendarDate | null)[]= new Array(42).fill(null)
+
     if(typeof props.year === 'undefined' || typeof props.month === 'undefined') {
-        return []
+        return days
     }
 
     // Dolžina meseca
@@ -52,9 +56,6 @@ const calendarDays = computed(() => {
 
     // Prvi dan v mesecu (oznaka zamaknjena, da je ponedeljek na prvem mestu)
     const firstDay = (new Date(props.year, props.month, 1).getDay() + 6) % 7
-
-    // Seznam dni v mesecu inicializiran s praznimi vrednostmi
-    const days: (CalendarDate | null)[]= new Array(42).fill(null)
 
     // Seznam napolnjen z vrednostjo dneva in oznako, ali je praznik
     for (let i = firstDay; i < monthLength + firstDay; i++) {
